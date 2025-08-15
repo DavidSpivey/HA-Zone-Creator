@@ -39,7 +39,7 @@ If everything is connected successfully, you will begin to see a blue dot where 
 
 1. Move into the area where you want to create a zone, and move around in all the places the zone should be created.
 2. Consider yourself to be "outlining" the zone with your body.
-3. Come back to the app and uncheck Movement trail to start defining the zone without altering your outline
+3. Come back to the app and Disconnect to start defining the zone without altering your outline
 
 You can click individial squares to create a zone
 
