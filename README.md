@@ -85,4 +85,4 @@ You can edit an existing zone by copying it from the Binary Sensor State in Home
 When you've made necessary changes, Copy Template again and overwrite the one in Home Assistant.
 
 ### MQTT password is saved in plain text
-For quick access, when MQTT settings are changed, they are immediately saved in settings.ini in the same folder as the app. The MQTT password is saved in plain text in this file, although it is not shown in plain text on the UI.
+For quick access, when MQTT settings are changed, they are immediately saved in settings.ini in the same folder as the app. The MQTT password is saved in plain text in this file, although it is hidden in the UI.
