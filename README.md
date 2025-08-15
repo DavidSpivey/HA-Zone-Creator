@@ -6,7 +6,7 @@ This is a companion app for 60GHz eMotion mmWave sensors such as eMotion Max and
 - Low accuracy: The grid in the LinkNLink app is quite low resolution (large squares).
 - Zones cannot overlap
 - Maximum of 4 zones
-- Zones
+- Poor 45-degree angle support (most of my sensors are in the corner of the room)
 
 #### This app features:
 * Significantly higher resolution: 100x100 grid across 8 meters square
