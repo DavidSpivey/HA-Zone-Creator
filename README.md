@@ -83,3 +83,6 @@ In this example, _7 and _8 represent "Target 1 X" and "Target 1 Y". "Target 2 X"
 ### Editing a zone
 You can edit an existing zone by copying it from the Binary Sensor State in Home Assistant, and clicking Load from Clipboard.<br>
 When you've made necessary changes, Copy Template again and overwrite the one in Home Assistant.
+
+### MQTT password is saved in plain text
+For quick access, when MQTT settings are changed, they are immediately saved in settings.ini in the same folder as the app. The MQTT password is saved in plain text in this file, although it is not shown in plain text on the UI.
