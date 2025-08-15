@@ -12,8 +12,8 @@ This app features:
 * Export and Import to/from the clipboard or a txt file for easy import into Home Assistant
 
 # Usage:
-Open the app and Home Assistant.
-Enter your MQTT ip address in Broker, username and password (if your MQTT instance is password protected)
+Open the app and Home Assistant.<br>
+Enter your MQTT ip address in Broker, username and password (if your MQTT instance is password protected)<br>
 Find your device ID in HA:
   Go to Settings > Devices & services > MQTT
   Click on your eMotion device
