@@ -12,19 +12,19 @@ This app features:
 * Export and Import to/from the clipboard or a txt file for easy import into Home Assistant
 
 # Usage:
-Open the app and Home Assistant.<br>
-Enter your MQTT ip address in Broker, username and password (if your MQTT instance is password protected)<br>
-Find your device ID in HA:
-	Go to Settings > Devices & services > MQTT
-	Click on your eMotion device
-	Click on the first sensor
-	Click the gear
-	Copy the portion of the Entity ID that is just the unique sensor number. For example, if your Entity ID is "sensor.lnlinkha_e04b410156c8000000000000d6ac0000_2", you only want to copy "e04b410156c8000000000000d6ac0000"
-Paste the Device ID into the app and click Connect.
+- Open the app and Home Assistant.
+- Enter your MQTT ip address in Broker, username and password (if your MQTT instance is password protected)
+- Find your device ID in HA:
+	- Go to Settings > Devices & services > MQTT
+	- Click on your eMotion device
+	- Click on the first sensor
+	- Click the gear
+	- Copy the portion of the Entity ID that is just the unique sensor number. For example, if your Entity ID is "sensor.lnlinkha_e04b410156c8000000000000d6ac0000_2", you only want to copy "e04b410156c8000000000000d6ac0000"
+- Paste the Device ID into the app and click Connect.
 
 If everything is connected successfully, you will begin to see
-	A blue dot where there is motion
-	A red trail where motion has been
+	- A blue dot where there is motion
+	- A red trail where motion has been
 
 Move into the area where you want to create a zone, and move around in all the places the zone should be created.<br>
 Consider yourself to be "outlining" the zone with your body.<br>
