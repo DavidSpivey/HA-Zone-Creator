@@ -2,9 +2,7 @@
 
 This is a companion app for 60GHz eMotion mmWave sensors such as eMotion Max and eMotion Ultra connected to Home Assistant through MQTT. This app will allow one to create customized zones for these sensors of almost any shape and export to Home Assistant.
 
-I noticed the grid offered in the LinkNLink app was quite low resolution (large squares), so I decided to make a companion app that would allow me to resolve some issues.
-
-This is the result of those efforts.
+The grid offered in the LinkNLink app is quite low resolution (large squares). Fortunately, with recent firmware updates, the developers have exposed useful functionality through MQTT so this is no longer a problem. This companion app allows me create more accurate zones easier.
 
 This app features:
 * Significantly higher resolution: 100x100 grid across 8 meters square
@@ -28,8 +26,8 @@ If everything is connected successfully, you will begin to see
   A blue dot where there is motion
   A red trail where motion has been
 
-Move into the area where you want to create a zone, and move around in all the places the zone should be created.
-Consider yourself to be "outlining" the zone with your body.
+Move into the area where you want to create a zone, and move around in all the places the zone should be created.<br>
+Consider yourself to be "outlining" the zone with your body.<br>
 Come back to the app and uncheck Movement trail to start defining the zone without altering your outline
 
 You can click individial squares to create a zone
@@ -38,18 +36,18 @@ You can click and drag to create rectangular areas
 
 You can click select diagonally to create diagonal rectangular areas if your sensor is at a 45-degree angle to the room
 
-You can use the Polygon selection tool by clicking once, moving to a new spot, and clicking again to create the first line
+You can use the Polygon selection tool by clicking once, moving to a new spot, and clicking again to create the first line<br>
 Then, after you have outlined the zone you wish to create, double click to complete the outline and highight your zone in orange.
 
-If you make a mistake and wish to remove squares from your zone, click "+ Adding to selection" and it will change to "- Removing from selection"
+If you make a mistake and wish to remove squares from your zone, click "+ Adding to selection" and it will change to "- Removing from selection"<br>
 Then use any of the tools to remove squares from the highlighted area.
 
 Once you are finished creating the zone, it's time to export it to Home Assistant.
-For simplicity, click "Copy Template".
-Go to Home Assistant > Settings > Devices & services > Helpers > + Create Helper > Template > Template a binary sensor.
-Paste the copied jinja template in "State"
-Name your zone at the top
-For Device Class, select motion
-Click submit
+1. For simplicity, click "Copy Template".
+2. Go to Home Assistant > Settings > Devices & services > Helpers > + Create Helper > Template > Template a binary sensor.
+3. Paste the copied jinja template in "State"
+4. Name your zone at the top
+5. For Device Class, select motion
+6. Click submit
 
 Congratulations! You have made a custom zone for your eMotion sensor in Home Assistant. Now you can start making automations based on your new zone.
