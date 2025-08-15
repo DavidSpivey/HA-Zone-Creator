@@ -1,6 +1,6 @@
 # HA-Zone-Creator
 
-This is a companion app for 60GHz eMotion mmWave sensors such as eMotion Max and eMotion Ultra connected to Home Assistant through MQTT. This app creates customized motion zones for these sensors of almost any shape and export to Home Assistant.
+This is a companion app for 60GHz eMotion mmWave sensors such as eMotion Max and eMotion Ultra connected to Home Assistant through MQTT. This app creates customized motion zones for these sensors of almost any shape to export to Home Assistant.
 
 #### The following LinkNLink app issues are solved with this app:
 - Low accuracy: The grid in the LinkNLink app is quite low resolution (large squares).
