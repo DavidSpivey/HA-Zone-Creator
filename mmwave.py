@@ -4,7 +4,7 @@
 # pip install paho-mqtt
 #
 # Create exe using
-# pyinstaller --onefile --noconsole --icon=mmwave.ico this.py
+# pyinstaller --onefile --noconsole --icon=mmwave.ico --add-data="mmwave.ico;." this.py
 import base64
 import tkinter as tk
 import sys
@@ -637,3 +637,4 @@ if __name__ == "__main__":
         root.withdraw() # Hide the empty root window
         messagebox.showerror("Fatal Error", f"An unexpected error occurred:\n\n{e}")
         root.destroy()
+
