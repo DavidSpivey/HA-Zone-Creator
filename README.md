@@ -33,7 +33,7 @@ This is a companion app for 60GHz eMotion mmWave sensors such as eMotion Max and
 	- Click on your eMotion device
 	- Click on the first sensor
 	- Click the gear
-	- Copy the portion of the Entity ID that is just the unique sensor number. For example, if your Entity ID is "sensor.lnlinkha_e04b410156c8000000000000d6ac0000_2", you only want to copy "e04b410156c8000000000000d6ac0000" (do not include _2)
+	- Copy the portion of the Entity ID that is just the unique sensor number. For example, if your Entity ID is "sensor.lnlinkha_e04b410156c8000000000000d6ac0000_2", you only want to copy "e04b410156c8000000000000d6ac0000" (e.g. not including _2)
 - Paste the Device ID into the app
 - Click Connect.
 
