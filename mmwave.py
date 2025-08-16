@@ -115,13 +115,16 @@ class MMWaveVisualizer:
     def _setup_gui(self):
         main_frame = tk.Frame(self.master)
         top_window = main_frame.winfo_toplevel()
+        # --- CORRECTED ICON LOADING ---
         # Check compiled status, change window icon conditionally
         if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
             # Running as a compiled executable
-            top_window.iconbitmap(sys.executable)
+            # Build the path to the icon file in the temporary directory
+            icon_path = os.path.join(sys._MEIPASS, 'mmwave.ico')
+            top_window.iconbitmap(icon_path)
         else:
             # Running from the Python interpreter (uncompiled)
-            # Ensure the icon file exists before trying to set it
+            # Ensure the icon file exists in the same directory as the script
             icon_path = os.path.join(os.path.dirname(__file__), 'mmwave.ico')
             if os.path.exists(icon_path):
                 top_window.iconbitmap(icon_path)
@@ -618,7 +621,6 @@ class MMWaveVisualizer:
 # --- Main Execution ---
 if __name__ == "__main__":
     try:
-        # This check is necessary for the script to be bundled by PyInstaller
         if 'pyi_splash' in os.environ:
              import pyi_splash
              pyi_splash.update_text('UI Initializing...')
@@ -627,4 +629,11 @@ if __name__ == "__main__":
         app = MMWaveVisualizer(root)
         root.mainloop()
     except Exception as e:
-        print(f"An error occurred: {e}"); input("Press Enter to exit.")
+        # --- CORRECTED ERROR HANDLING ---
+        # Use a messagebox for GUI apps instead of print/input
+        import tkinter as tk
+        from tkinter import messagebox
+        root = tk.Tk()
+        root.withdraw() # Hide the empty root window
+        messagebox.showerror("Fatal Error", f"An unexpected error occurred:\n\n{e}")
+        root.destroy()
