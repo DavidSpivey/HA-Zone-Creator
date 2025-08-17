@@ -98,6 +98,8 @@ class MMWaveVisualizer:
         # --- MQTT Client ---
         self.mqtt_client = None
         self.mqtt_thread = None
+        self.last_known_device_id = None # For dynamic topic changes
+        self._device_id_trace_active = True # Flag to prevent recursion in trace
 
         # --- Correctly determine path for settings file ---
         if getattr(sys, 'frozen', False):
@@ -164,7 +166,10 @@ class MMWaveVisualizer:
         self.mqtt_pass.trace_add("write", lambda *args: self._save_settings())
         tk.Label(settings_frame, text="Device ID:", anchor='w').grid(row=3, column=0, sticky='w', pady=2)
         tk.Entry(settings_frame, textvariable=self.device_id).grid(row=3, column=1, sticky='ew')
-        self.device_id.trace_add("write", lambda *args: self._save_settings())
+        # Combined trace for saving and handling device ID changes
+        self.device_id.trace_add("write", self._handle_device_id_change)
+        self.last_known_device_id = self.device_id.get() # Initialize last known ID
+
         settings_frame.grid_columnconfigure(1, weight=1)
 
         connect_frame = tk.Frame(controls_frame)
@@ -187,7 +192,8 @@ class MMWaveVisualizer:
         self.add_mode_label = tk.Label(zone_frame, textvariable=self.add_mode_text, cursor="hand2")
         self.add_mode_label.bind("<1>", self._toggle_add_mode)
         self.add_mode_label.pack(anchor='w', pady=5)
-        tk.Checkbutton(zone_frame, text="Movement trail", variable=self.trail_enabled, command=self._toggle_trail).pack(anchor='w')
+        # Removed command from checkbutton to prevent trail clearing on uncheck
+        tk.Checkbutton(zone_frame, text="Movement trail", variable=self.trail_enabled).pack(anchor='w')
 
         tk.Frame(zone_frame, height=10).pack()
 
@@ -195,7 +201,9 @@ class MMWaveVisualizer:
         tk.Button(zone_frame, image=self.save_icon, text="  Save Template to File", compound="left", command=self._save_template_to_file).pack(fill=tk.X, pady=2)
         tk.Button(zone_frame, image=self.paste_icon, text="  Load from Clipboard", compound="left", command=self._load_zone_from_clipboard).pack(fill=tk.X, pady=2)
         tk.Button(zone_frame, image=self.load_icon, text="  Load from File", compound="left", command=self._load_zone_from_file).pack(fill=tk.X, pady=2)
-        tk.Button(zone_frame, text="Clear Zones", command=self._clear_zone).pack(fill=tk.X, pady=(10,0))
+        tk.Button(zone_frame, text="Clear Zones", command=self._clear_zone).pack(fill=tk.X, pady=(10,2))
+        # Added new button to clear movement trails
+        tk.Button(zone_frame, text="Clear Movement Trails", command=self._clear_trail).pack(fill=tk.X, pady=2)
 
     def _toggle_diagonal_mode(self):
         self.diagonal_mode.set(not self.diagonal_mode.get())
@@ -240,10 +248,47 @@ class MMWaveVisualizer:
         with open(self.config_file, "w") as f:
             config.write(f)
 
-    def _toggle_trail(self):
-        if not self.trail_enabled.get():
+    def _handle_device_id_change(self, *args):
+        """Extracts Device ID, saves settings, and handles MQTT topic changes."""
+        if not self._device_id_trace_active:
+            return
+
+        current_value = self.device_id.get()
+        match = re.search(r'([a-fA-F0-9]{32})', current_value)
+
+        extracted_id = match.group(1) if match else current_value
+
+        # Update the entry box if the extracted ID is different
+        if extracted_id != current_value:
+            self._device_id_trace_active = False # Prevent recursion
+            self.device_id.set(extracted_id)
+            self._device_id_trace_active = True
+
+        # Save settings regardless of change
+        self._save_settings()
+
+        # Handle topic change if the valid ID has changed
+        if extracted_id and extracted_id != self.last_known_device_id:
+            print(f"Device ID changed from {self.last_known_device_id} to {extracted_id}")
+
+            # If connected, unsubscribe from old topics
+            if self.mqtt_client and self.mqtt_client.is_connected() and self.last_known_device_id:
+                old_topic_x = f"home/{self.last_known_device_id}_tar_1_x/status"
+                old_topic_y = f"home/{self.last_known_device_id}_tar_1_y/status"
+                self.mqtt_client.unsubscribe([old_topic_x, old_topic_y])
+                print(f"Unsubscribed from old topics for {self.last_known_device_id}")
+
+            self.last_known_device_id = extracted_id
+
+            # Clear the screen
+            self.zone_squares.clear()
             self.trail_squares.clear()
+            self.target_square_coords = None
             self._redraw_canvas()
+
+            # If connected, subscribe to new topics
+            if self.mqtt_client and self.mqtt_client.is_connected():
+                self._subscribe_to_topics(self.mqtt_client)
 
     def _on_canvas_resize(self, event):
         size = min(event.width, event.height)
@@ -263,8 +308,13 @@ class MMWaveVisualizer:
         self.canvas.delete("all")
         self.colored_square_ids.clear()
         self._draw_grid_lines()
+        # Draw zones first
         for r, c in self.zone_squares:
             self._update_square_color(r, c)
+        # Then draw trails over them if they overlap
+        for r, c in self.trail_squares:
+            self._update_square_color(r, c)
+        # Finally, draw the target on top
         if self.target_square_coords:
             self._update_square_color(self.target_square_coords[0], self.target_square_coords[1])
 
@@ -273,20 +323,21 @@ class MMWaveVisualizer:
             return
 
         is_target = (r, c) == self.target_square_coords
-        is_zone = (r, c) in self.zone_squares
         is_trail = (r, c) in self.trail_squares
+        is_zone = (r, c) in self.zone_squares
         item_id = self.colored_square_ids.get((r, c))
 
-        if not is_target and not is_zone and not is_trail:
+        if not is_target and not is_trail and not is_zone:
             if item_id:
                 self.canvas.delete(item_id)
                 del self.colored_square_ids[(r, c)]
             return
 
+        # Determine color based on priority: target > trail > zone
         if is_target: color = "blue"
         elif is_trail: color = "red"
         elif is_zone: color = "orange"
-        else: color = "white"
+        else: color = "white" # Should not happen based on logic above
 
         if item_id:
             self.canvas.itemconfig(item_id, fill=color)
@@ -296,8 +347,9 @@ class MMWaveVisualizer:
             new_id = self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="")
             self.colored_square_ids[(r, c)] = new_id
 
+        # Ensure target and trail are always drawn on top of zones
         if is_target or is_trail:
-            self.canvas.tag_raise(self.colored_square_ids[(r, c)])
+            self.canvas.tag_raise(self.colored_square_ids.get((r, c)))
 
     def _connect_mqtt(self):
         self._disconnect_mqtt(); time.sleep(0.1)
@@ -317,19 +369,43 @@ class MMWaveVisualizer:
         except Exception as e:
             messagebox.showerror("MQTT Error", f"Could not connect to broker: {e}")
             self.connection_status.set("Status: Connection failed")
+
     def _disconnect_mqtt(self):
-        if self.mqtt_client: self.mqtt_client.loop_stop(); self.mqtt_client.disconnect(); print("MQTT Disconnected.")
+        if self.mqtt_client and self.mqtt_client.is_connected():
+            self.mqtt_client.loop_stop()
+            self.mqtt_client.disconnect()
+            print("MQTT Disconnected.")
+        # Clear target square on disconnect and redraw
+        if self.target_square_coords:
+            self.target_square_coords = None
+            self._redraw_canvas()
+
+    def _subscribe_to_topics(self, client):
+        """Subscribes to MQTT topics based on the current device ID."""
+        dev_id = self.device_id.get()
+        if not dev_id:
+            print("Cannot subscribe, Device ID is empty.")
+            return
+        topic_x = f"home/{dev_id}_tar_1_x/status"
+        topic_y = f"home/{dev_id}_tar_1_y/status"
+        client.subscribe([(topic_x, 0), (topic_y, 0)])
+        print(f"Subscribed to:\n- {topic_x}\n- {topic_y}")
+
     def _on_mqtt_connect(self, client, userdata, flags, rc):
         if rc == 0:
             print("MQTT Connected Successfully."); self.connection_status.set("Status: Connected")
-            dev_id = self.device_id.get(); topic_x = f"home/{dev_id}_tar_1_x/status"; topic_y = f"home/{dev_id}_tar_1_y/status"
-            client.subscribe([(topic_x, 0), (topic_y, 0)]); print(f"Subscribed to:\n- {topic_x}\n- {topic_y}")
+            self._subscribe_to_topics(client)
         else:
             error_messages = {1:"protocol version", 2:"client identifier", 3:"server unavailable", 4:"bad username/password", 5:"not authorised"}
             error_text = f"Failed to connect: {error_messages.get(rc, 'Unknown error')} (Code: {rc})"
             messagebox.showerror("MQTT Error", error_text); self.connection_status.set(f"Status: Failed")
+
     def _on_mqtt_disconnect(self, client, userdata, rc):
         self.connection_status.set("Status: Disconnected"); print(f"MQTT client disconnected with result code: {rc}")
+        if self.target_square_coords:
+            self.target_square_coords = None
+            self._redraw_canvas()
+
     def _on_mqtt_message(self, client, userdata, msg):
         try:
             payload = float(msg.payload.decode())
@@ -354,10 +430,9 @@ class MMWaveVisualizer:
             row = max(0, min(GRID_DIMENSION - 1, row))
             self.target_square_coords = (row, col)
             if self.trail_enabled.get(): self.trail_squares.add((row, col))
-        if old_coords and old_coords != self.target_square_coords:
-            self._update_square_color(old_coords[0], old_coords[1])
-        if self.target_square_coords:
-            self._update_square_color(self.target_square_coords[0], self.target_square_coords[1])
+
+        # Redraw the whole canvas to ensure proper layering
+        self._redraw_canvas()
 
     def _get_coords_from_event(self, event):
         c = int(event.x / self.cell_pixel_size); r = int(event.y / self.cell_pixel_size); return r, c
@@ -433,6 +508,10 @@ class MMWaveVisualizer:
 
     def _clear_zone(self):
         self.zone_squares.clear(); self._redraw_canvas(); print("Zone cleared.")
+
+    def _clear_trail(self):
+        self.trail_squares.clear(); self._redraw_canvas(); print("Movement trail cleared.")
+
     def _copy_template_to_clipboard(self):
         if not self.zone_squares: messagebox.showwarning("Empty Zone", "No zone is selected."); return
         template = self._generate_jinja_template()
@@ -637,4 +716,3 @@ if __name__ == "__main__":
         root.withdraw() # Hide the empty root window
         messagebox.showerror("Fatal Error", f"An unexpected error occurred:\n\n{e}")
         root.destroy()
-
