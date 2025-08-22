@@ -29,13 +29,28 @@ This is a companion app for 60GHz eMotion mmWave sensors such as eMotion Max and
 - Enter your MQTT ip address in Broker
 - If your MQTT instance is password protected, enter your username / password
 - Find your device ID in HA:
+	- NEW in v0.95: (Optional) You can connect to Home Assistant directly instead of manually copying the Device ID. If you wish to do so, skip to Home Assistant direct connection.
 	- Go to Settings > Devices & services > MQTT
 	- Click on your eMotion device
 	- Click on the first sensor
 	- Click the gear
-	- Copy the portion of the Entity ID that is just the unique sensor number. For example, if your Entity ID is "sensor.lnlinkha_e04b410156c8000000000000d6ac0000_2", you only want to copy "e04b410156c8000000000000d6ac0000" (e.g. not including _2)
+	- Copy the Entity ID. It will look something like "sensor.lnlinkha_e04b410156c8000000000000d6ac0000_2"
 - Paste the Device ID into the app
 - Click Connect.
+
+### (Optional) Home Assistant direct connection (NEW in v0.95)
+If you connect directly to Home Assistant, you no longer have to remember and paste Device IDs, as your device will be listed in a dropdown!
+To set this up,
+- Enter your Home Assistant address in "HA Address"
+- Open Home Assistant
+- After logging in, click on your Profile a the bottom left of the sidebar menu
+- Click on the Security Tab
+- Scroll down to Long-lived access tokens and click Create Token
+- Enter any name for this token, and click OK
+- **IMPORTANT:** The token appears _once_, and **cannot be seen again**, so copy it somewhere safe
+- Paste the token in "Access Token"
+You will now see any eMotion Max devices listed in the dropdown, and can switch between them easily.
+If you are not yet connected in the MQTT settings, click Connect.
 
 If everything is connected successfully, you will begin to see a blue dot where there is motion, and a red trail where motion has been
 
@@ -50,7 +65,8 @@ You can click and drag to create rectangular areas
 You can click select diagonally to create diagonal rectangular areas if your sensor is at a 45-degree angle to the room
 
 You can use the Polygon selection tool by clicking once, moving to a new spot, and clicking again to create the first line<br>
-Then, after you have outlined the zone you wish to create, double click to complete the outline and highight your zone in orange.
+Click again at each corner you wish to outline.<br>
+After you have outlined the zone you wish to create, double click to complete the outline and highight your zone in orange.
 
 If you make a mistake and wish to remove squares from your zone, click "+ Adding to selection" and it will change to "- Removing from selection"<br>
 Then use any of the tools to remove squares from the highlighted area.
@@ -75,16 +91,15 @@ For example:
 ```
 In this example, _7 and _8 represent "Target 1 X" and "Target 1 Y". "Target 2 X" and "Target 2 Y" are _11 and _12. Click on the Target (whatever) X and Y in Home Assistant, then click the gear to get the Entity ID you wish to track.
 
-### You can temporarily increase the speed of detection for the purpose of outlining a zone.
+### NEW in v0.95: Speed of detection is temporarily increased
+By default, the eMotion sensors use an update time of 2 seconds. in v0.95, this value is increased to 0.5 seconds during the use of the app. Permanently setting this value faster than 2 seconds _might_ hinder MQTT performance by significantly increasing the number of messages. If you have a high performance MQTT broker and desire near-instant zone updates, do the following
 - Go to Settings > Devices & services > MQTT
 - Click on your eMotion device
 - Scroll down to configuration and drag Radar target update frequency (sec) to 0.5
-- **DON'T FORGET** to reset this value to 2 (default) when finished, as leaving it at a half second can make your MQTT messages significantly verbose and might hinder performance.
-	- (Ignore this if you have a high performance broker and desire near-instant zone updates)
 
 ### Editing a zone
 You can edit an existing zone by copying it from the Binary Sensor State in Home Assistant, and clicking Load from Clipboard.<br>
 When you've made necessary changes, Copy Template again and overwrite the one in Home Assistant.
 
-### MQTT password is saved in plain text
-For quick access, when MQTT settings are changed, they are immediately saved in settings.ini in the same folder as the app. The MQTT password is saved in plain text in this file, although it is hidden in the UI.
+### MQTT password and Home Assistant Long-Lived Access Token are saved in plain text when entered
+Privacy-conscious individuals need to keep settings.ini from prying eyes. For quick access, when connection settings are changed, they are immediately saved in settings.ini in the same folder as the app. This means your MQTT password and HA Token are saved in plain text in this file, although they are hidden in the UI.
